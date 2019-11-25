@@ -26,7 +26,7 @@ float dt = 0.0f;
 float t = 0.0f;
 float ref_t = 0.0f;
 int projectionMode = Perspective;
-float cam_position[3] = {0.0f, 0.0f, 0.0f};
+float cam_position[3] = {0.0f, 5.0f, 0.0f};
 float cam_rotation[3];
 float fovy = 60.0;
 
@@ -45,43 +45,45 @@ void draw_circle(float x, float y, float radius);
 void planet(float x, float y, float z, float distance, float size, float rotationSpeed){
 	//"Translation"
 	glRotatef(rotationSpeed * t, x, y, z);
-	glTranslatef(0.0f, 0.0f, distance);
-
-	//Local rotation
-	glRotatef(t, 0.0f, 1.0f, 0.0f);
 	
-	glutSolidSphere(size, 20, 20);
+	glTranslatef(0.0f, 0.0f, distance);
+	//Local rotation
+	glRotatef(0.0f, 0.0f, 1.0f, 0.0f);
+	
+	glutSolidSphere(size, 200, 200);
 }
 
 
 void planet1(){
 	glColor3f(1.0f, 0.0f, 0.0f);
-	planet(0.0f, 1.0f, 0.0f, 100.0f, 15.0f, -10.0f);
+	planet(0.0f, 1.0f, 0.0f, 100.0f, 15.0f, 1.0f);
 }
 
 void planet2(){
 	glColor3f(0.0f, 0.0f, 1.0f);
-	planet(0.0f, 1.0f, 0.0f, 200.0f, 10.0f, -10.0f);
+	planet(0.0f, 1.0f, 0.0f, 200.0f, 10.0f, 1.0f);
 
 	glPushMatrix();
 	glColor3f(0.5f, 0.5f, 0.5f);
-	planet(0.0f, 1.0f, 0.0f, 20.0f, 2.0f, 10.0f);
+	planet(0.0f, 1.0f, 0.0f, 20.0f, 2.0f, 1.0f);
 	glPopMatrix();
 	
 	glPushMatrix();
 	glColor3f(0.25f, 0.25f, 0.25f);
-	planet(1.0f, 1.0f, 0.0f, 50.0f, 3.0f, -100.0f);
+	planet(1.0f, 0.0f, 0.0f, 50.0f, 3.0f, -1.0f);
 	glPopMatrix();
 }
 
 void sun() {
 	glColor3f(1.0f, 1.0f, 0.0f);
-	planet(0.0f, 1.0f, 0.0f, 0.0f, 30.0f, 10.0f);
+	planet(0.0f, 1.0f, 0.0f, 0.0f, 30.0f, 1.0f);
 
+	//RedPlanet
 	glPushMatrix();
 	planet1();
 	glPopMatrix();
 
+	//BluPlanet
 	glPushMatrix();
 	planet2();
 	glPopMatrix();
