@@ -26,8 +26,8 @@ float dt = 0.0f;
 float t = 0.0f;
 float ref_t = 0.0f;
 int projectionMode = Perspective;
-float cam_position[3] = {0.0f, 5.0f, 0.0f};
-float cam_rotation[3];
+float cam_position[3] = {0.0f, 25.0f, 100.0f};
+float cam_rotation[3] = {-15.0, 0.0, 0.0};
 float fovy = 60.0;
 
 /* GLUT callbacks */
@@ -93,9 +93,66 @@ void solarSystem(){
 	sun();
 }
 
+void house(){
+	GLfloat colors[][3] = {
+		{1.0, 1.0, 1.0},
+		{1.0, 0.0, 0.0},
+		{0.0, 1.0, 0.0},
+		{0.0, 0.0, 1.0},
+		{1.0, 1.0, 0.0},
+		{1.0, 0.0, 1.0},
+		{0.0, 1.0, 1.0},
+		{0.5, 0.1, 0.1},
+		{0.5, 0.1, 0.1},
+		{0.5, 0.1, 0.1},
+		{0.5, 0.1, 0.1},
+		{0.5, 0.1, 0.1},
+		{0.5, 0.1, 0.1},
+		{0.5, 0.1, 0.1},
+		{0.4, 0.2, 0.1},
+		{0.4, 0.1, 0.2},
+		{0.5, 0.1, 0.1}
+	};
+	GLfloat vertices[][3] = {
+		{0.0f, 0.0f, 30.0f},
+		{30.0f, 0.0f, 30.0f},
+		{30.0f, 20.0f, 30.0f},
+		{20.0f, 30.0f, 30.0f},
+		{0.0f, 30.0f, 30.0f},
+		{0.0f, 30.0f, 0.0f},
+		{30.0f, 30.0f, 0.0f},
+		{30.0f, 0.0f, 0.0f},
+		{0.0f, 0.0f, 0.0f},
+		{30.0f, 30.0f, 20.0f},
+		{15.0f, 50.0f, 15.0f}
+	};
+	int faces[][5] = {
+		{0, 1, 2, 3, 4},
+		{1, 7, 6, 9, 2},
+		{7, 8, 5, 6},
+		{8, 0, 4, 5},
+		{0, 1, 7, 8},
+		{2, 9, 3},
+		{4, 3, 9, 6, 5},
+		{10, 5, 4},
+		{10, 4, 3},
+		{10, 3, 9},
+		{10, 9, 6},
+		{10, 6, 5}
+	};
+	int count[] = {5, 5, 4, 4, 4, 3, 5, 3, 3, 3, 3, 3};
+	int n_faces = sizeof(faces)/ (5 * sizeof(int));
 
-
-
+	int i, j;
+	for(i = 0;i < n_faces;i++){
+		glColor3f(colors[i][X], colors[i][Y], colors[i][Z]);
+		glBegin(GL_POLYGON);
+		for(j = 0;j < count[i];j++){
+			glVertex3f(vertices[faces[i][j]][X], vertices[faces[i][j]][Y], vertices[faces[i][j]][Z]);
+		}
+		glEnd();
+	}
+}
 
 void init(int* argc, char** argv, int window_width, int window_height, int display_mode, const char* window_name){
 	glutInit(argc, argv);
@@ -117,7 +174,7 @@ void idle(void) {
     dt = (t - old_t);
     old_t = t;
 
-    gluLookAt(cam_position[X], cam_position[Y], cam_position[Z], cam_rotation[X], cam_rotation[Y], cam_rotation[Z], 0.0f, 1.0f, 0.0f);
+    //gluLookAt(cam_position[X], cam_position[Y], cam_position[Z], cam_rotation[X], cam_rotation[Y], cam_rotation[Z], 0.0f, 1.0f, 0.0f);
 
     glutPostRedisplay();
 }
@@ -136,11 +193,12 @@ void reshape(int w, int h){
 			glOrtho(-WINDOW_WIDTH / 2.0f, WINDOW_WIDTH / 2.0f, (WINDOW_WIDTH * aspect) / 2.0f, (-WINDOW_WIDTH * aspect) / 2.0f, -1000.0f, 1000.0f);
 			break;
 		case Perspective:
-			gluPerspective(fovy, aspect, 0.001, 1000.0f);
+			gluPerspective(fovy, 1.0/aspect, 0.001, 1000.0f);
 	}
 }
 
 void motion(int x, int y){
+	//cam_rotation[X] += dt;
 }
 
 void keyboard(unsigned char key, int x, int y){
@@ -159,11 +217,14 @@ void display(){
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+	glTranslatef(-cam_position[X], -cam_position[Y], -cam_position[Z]);
+	glRotatef(-cam_rotation[X], 1.0, 0.0, 0.0);
+	glRotatef(-cam_rotation[Y], 0.0, 1.0, 0.0);
 
-	draw_line(0.0f, 1000.0f, 0.0f, 0.0f, -1000.0f, 0.0f);
+	glRotatef(t * 50, 0.0, 1.0, 0.0);
 
-	//planet(0.0f, 0.0f, 0.0f, 100.0f, 50.0f);
-	solarSystem();
+	house();
+
  	glutSwapBuffers();
 }
 
