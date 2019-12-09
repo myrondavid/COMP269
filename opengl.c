@@ -5,6 +5,7 @@
 
 #define min(a, b) ((a) < (b) ? a : b)
 #define max(a, b) ((a) > (b) ? a : b)
+#define radians(a) (a * M_PI / 180.0f)
 
 enum {
 	X,
@@ -26,9 +27,14 @@ float dt = 0.0f;
 float t = 0.0f;
 float ref_t = 0.0f;
 int projectionMode = Perspective;
-float cam_position[3] = {0.0f, 25.0f, 100.0f};
-float cam_rotation[3] = {-15.0, 0.0, 0.0};
-float fovy = 60.0;
+float cam_position[3] = {0.0f, 1.73f, 5.0f};
+float cam_rotation[3] = {0.0f, 0.0f, 0.0f};
+float fovy = 60.0f;
+int walk[3];
+int rotate[3];
+float move_speed = 10.0f;
+float rotation_speed = 180.0f;
+float sensibility[2] = {10.0f, 10.0f};
 
 /* GLUT callbacks */
 void init(int* argc, char** argv, int window_width, int window_height, int display_mode, const char* window_name);
@@ -36,11 +42,14 @@ void idle(void);
 void reshape(int w, int h);
 void motion(int w, int h);
 void keyboard(unsigned char key, int x, int y);
+void keyboard_up(unsigned char key, int x, int y);
 void display();
 
 void draw_line(float x0, float y0, float z0, float x1, float y1, float z1);
 void draw_rectangle(float x, float y, float w, float h, float angle);
 void draw_circle(float x, float y, float radius);
+void draw_floor(float grid_size, int n);
+void draw_axis();
 
 void planet(float x, float y, float z, float distance, float size, float rotationSpeed){
 	//"Translation"
@@ -114,17 +123,17 @@ void house(){
 		{0.5, 0.1, 0.1}
 	};
 	GLfloat vertices[][3] = {
-		{0.0f, 0.0f, 30.0f},
-		{30.0f, 0.0f, 30.0f},
-		{30.0f, 20.0f, 30.0f},
-		{20.0f, 30.0f, 30.0f},
-		{0.0f, 30.0f, 30.0f},
-		{0.0f, 30.0f, 0.0f},
-		{30.0f, 30.0f, 0.0f},
-		{30.0f, 0.0f, 0.0f},
+		{0.0f, 0.0f, 3.0f},
+		{3.0f, 0.0f, 3.0f},
+		{3.0f, 2.0f, 3.0f},
+		{2.0f, 3.0f, 3.0f},
+		{0.0f, 3.0f, 3.0f},
+		{0.0f, 3.0f, 0.0f},
+		{3.0f, 3.0f, 0.0f},
+		{3.0f, 0.0f, 0.0f},
 		{0.0f, 0.0f, 0.0f},
-		{30.0f, 30.0f, 20.0f},
-		{15.0f, 50.0f, 15.0f}
+		{3.0f, 3.0f, 2.0f},
+		{1.5f, 5.0f, 1.5f}
 	};
 	int faces[][5] = {
 		{0, 1, 2, 3, 4},
@@ -174,6 +183,11 @@ void idle(void) {
     dt = (t - old_t);
     old_t = t;
 
+    
+    cam_position[Z] -= move_speed * (walk[Z] * sin(radians(cam_rotation[Y]) + M_PI_2) + walk[X] * sin(radians(cam_rotation[Y]))) * dt;
+    cam_position[X] += move_speed * (walk[Z] * cos(radians(cam_rotation[Y]) + M_PI_2) + walk[X] * cos(radians(cam_rotation[Y]))) * dt;
+
+	
     //gluLookAt(cam_position[X], cam_position[Y], cam_position[Z], cam_rotation[X], cam_rotation[Y], cam_rotation[Z], 0.0f, 1.0f, 0.0f);
 
     glutPostRedisplay();
@@ -199,15 +213,48 @@ void reshape(int w, int h){
 
 void motion(int x, int y){
 	//cam_rotation[X] += dt;
+	static int last[2];
+	cam_rotation[Y] -= (x - last[X]) * sensibility[X] * dt;
+	cam_rotation[X] -= (y - last[Y]) * sensibility[Y] * dt;
+
+	last[X] = x;
+	last[Y] = y;
 }
 
 void keyboard(unsigned char key, int x, int y){
 	if(key == 'r'){
 		ref_t = glutGet(GLUT_ELAPSED_TIME) / 1000.0;
 	}
-	if(key == 'c'){
-		projectionMode = !projectionMode;
-		reshape(glutGet(GLUT_WINDOW_WIDTH), glutGet(GLUT_WINDOW_HEIGHT));
+	else if(key == 'c'){
+	    	projectionMode = !projectionMode;
+	    	reshape(glutGet(GLUT_WINDOW_WIDTH), glutGet(GLUT_WINDOW_HEIGHT));
+	}
+	else if (key == 'w'){
+ 	    	walk[Z] = 1;	
+	}
+	else if (key == 's'){
+		walk[Z] = -1;	
+	}
+	else if (key == 'd'){
+ 	    	walk[X] = 1;	
+	}
+	else if (key == 'a'){
+		walk[X] = -1;	
+	}
+}
+
+void keyboard_up(unsigned char key, int x, int y){
+	if(key == 'w'){
+	    walk[Z] = 0;
+	}
+	else if(key == 's'){
+	    walk[Z] = 0;
+	}
+	else if(key == 'd'){
+	    walk[X] = 0;
+	}
+	else if(key == 'a'){
+	    walk[X] = 0;
 	}
 }
 
@@ -217,12 +264,14 @@ void display(){
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glTranslatef(-cam_position[X], -cam_position[Y], -cam_position[Z]);
+	
 	glRotatef(-cam_rotation[X], 1.0, 0.0, 0.0);
 	glRotatef(-cam_rotation[Y], 0.0, 1.0, 0.0);
 
-	glRotatef(t * 50, 0.0, 1.0, 0.0);
+	glTranslatef(-cam_position[X], -cam_position[Y], -cam_position[Z]);
 
+	draw_floor(1.0f, 50);
+	draw_axis();
 	house();
 
  	glutSwapBuffers();
@@ -236,7 +285,6 @@ void draw_circle(float x, float y, float radius){
 	glBegin(GL_POLYGON);
 	float i;
 	for(i = 0.0f; i < 2 * M_PI; i += M_PI / 20){
-
 		glVertex2f(cos(i) * radius, sin(i) * radius);
 	}
 	glEnd();
@@ -277,6 +325,29 @@ void draw_rectangle(float x, float y, float w, float h, float angle){
 	glPopMatrix();
 }
 
+void draw_floor(float grid_size, int n){
+	float width = 0.75f;
+	glColor3f(width, width, width);
+	glLineWidth(width);
+	int i, j; 
+	for(i = 1;i < n;i++){
+		draw_line(i * grid_size, 0.0f, n * grid_size, i * grid_size, 0.0f, -n * grid_size);
+		draw_line(-i * grid_size, 0.0f, n * grid_size, -i * grid_size, 0.0f, -n * grid_size);
+		draw_line(n * grid_size, 0.0f, i * grid_size, -n * grid_size, 0.0f, i * grid_size);
+		draw_line(n * grid_size, 0.0f, -i * grid_size, -n * grid_size, 0.0f, -i * grid_size);
+	}
+}
+
+void draw_axis(){
+	float width = 1.5f;
+	glLineWidth(width);
+	glColor3f(1.0f, 0.0f, 0.0f);
+	draw_line(0.0f, 0.0f, 0.0f, 100, 0.0f, 0.0f);	
+	glColor3f(0.0f, 1.0f, 0.0f);
+	draw_line(0.0f, 0.0f, 0.0f, 0.0f, 100, 0.0f);
+	glColor3f(0.0f, 0.0f, 1.0f);
+	draw_line(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 100);
+}
 
 int main(int argc, char** argv){
 	init(&argc, argv, WINDOW_WIDTH, WINDOW_HEIGHT, GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH, WINDOW_NAME);
@@ -286,10 +357,10 @@ int main(int argc, char** argv){
 	glutMotionFunc(motion);
 	glutPassiveMotionFunc(motion);
 	glutKeyboardFunc(keyboard);
+	glutKeyboardUpFunc(keyboard_up);
 	glutDisplayFunc(display);
 
 	glutMainLoop();
 
 	return 0;
 }
-
