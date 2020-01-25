@@ -170,6 +170,9 @@ void init(int* argc, char** argv, int window_width, int window_height, int displ
 	glutCreateWindow(window_name);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	glEnable(GL_COLOR_MATERIAL);
 	glCullFace(GL_BACK);
 	glPolygonMode(GL_FRONT, GL_FILL);
 
@@ -272,7 +275,8 @@ void display(){
 
 	draw_floor(1.0f, 50);
 	draw_axis();
-	house();
+	
+	sun();
 
  	glutSwapBuffers();
 }
